@@ -52,14 +52,24 @@ const userSchema = new Schema(
     }
 )
 
-userSchema.pre("save", async function (next) {
-    if(!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+    if(!this.isModified("password"))  { 
+        console.log("Password not modified, skipping hash");
+        // return next();
+        return;
+    };
 
     this.password = await bcrypt.hash(this.password, 10)
-    next()
+    console.log("Password hashed: ", this.password);
+    // console.log("type of next" , typeof next);
+    // return next()
+    return;
 })
 
+
+
 userSchema.methods.isPasswordCorrect = async function(password){
+    console.log("comparing password: ", password, " with hash: ", this.password);
     return await bcrypt.compare(password, this.password)
 }
 

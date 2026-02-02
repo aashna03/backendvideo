@@ -41,11 +41,20 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // check for images, check for avatar
-    const avatarLocalPath = req.files?.avatar?.[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    console.log("Register request content-type:", req.headers['content-type']);
+    console.log("Is multipart/form-data:", req.is && req.is("multipart/form-data"));
+    console.log("Uploaded files:", req.files);
 
+    const avatarLocalPath = req.files?.avatar[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+    
     if(!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required");
+        console.error("Avatar missing - req.files:", req.files);
+        throw new ApiError(400, "Avatar file is required. Ensure request is multipart/form-data and the file field is named 'avatar'");
     }
 
     // upload them to cloudinary, avatar
@@ -53,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
     if (!avatar) {
-        throw new ApiError(400, "Avatar file is required")
+        throw new ApiError(400, "Avatar file is required.")
     }
 
     // create user object - create entry in db
